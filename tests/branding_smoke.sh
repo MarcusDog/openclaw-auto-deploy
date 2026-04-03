@@ -38,7 +38,13 @@ assert_not_contains "$CONFIG_MENU_SH" "$OLD_REPO"
 assert_not_contains "$README_MD" "$OLD_REPO"
 
 assert_contains "$INSTALL_SH" "OpenClaw Auto Deploy"
+assert_contains "$INSTALL_SH" "安装旅程总览"
+assert_contains "$INSTALL_SH" "体验亮点"
 assert_contains "$CONFIG_MENU_SH" "OpenClaw Control Center"
+assert_contains "$CONFIG_MENU_SH" "状态速览"
+assert_contains "$CONFIG_MENU_SH" "核心配置"
 assert_contains "$README_MD" "openclaw-auto-deploy"
+assert_contains "$README_MD" "推荐工作流"
+assert_contains "$README_MD" "平台支持矩阵"
 
 echo "branding_smoke: ok"

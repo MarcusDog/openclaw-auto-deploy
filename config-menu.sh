@@ -79,11 +79,18 @@ EOF
     echo -e "${NC}"
     echo -e "${WHITE}  🎨 风格:${NC} 轻快活泼 · 清晰分区 · 命令行友好"
     echo -e "${WHITE}  🔗 仓库:${NC} ${PURPLE}${GITHUB_URL}${NC}"
+    echo -e "${WHITE}  📍 当前区域:${NC} ${CYAN}${CONFIG_DIR}${NC}"
     echo ""
 }
 
 print_divider() {
     echo -e "${GRAY}··························································${NC}"
+}
+
+print_status_badge() {
+    local color="$1"
+    local text="$2"
+    echo -e "${color}[ ${text} ]${NC}"
 }
 
 print_menu_item() {
@@ -121,7 +128,7 @@ confirm() {
         local prompt="[y/N]"
     fi
     
-    echo -en "${YELLOW}$message $prompt: ${NC}"
+    echo -en "${YELLOW}❯ $message $prompt: ${NC}"
     read response < "$TTY_INPUT"
     response=${response:-$default}
     
@@ -238,6 +245,33 @@ get_env_value() {
     if [ -f "$OPENCLAW_ENV" ]; then
         grep "^export $key=" "$OPENCLAW_ENV" 2>/dev/null | sed 's/.*=//' | tr -d '"'
     fi
+}
+
+get_gateway_status_label() {
+    local pid
+    pid=$(get_port_pid 18789)
+    if [ -n "$pid" ]; then
+        echo -e "${GREEN}[ 运行中 ]${NC}"
+    else
+        echo -e "${YELLOW}[ 未启动 ]${NC}"
+    fi
+}
+
+get_profile_status_label() {
+    if [ -f "$OPENCLAW_ENV" ]; then
+        echo -e "${GREEN}[ 已初始化 ]${NC}"
+    else
+        echo -e "${YELLOW}[ 待配置 ]${NC}"
+    fi
+}
+
+show_control_center_snapshot() {
+    echo -e "${WHITE}状态速览${NC}"
+    echo ""
+    echo -e "  Gateway   $(get_gateway_status_label)"
+    echo -e "  配置文件  $(get_profile_status_label)"
+    echo -e "  配置目录  ${CYAN}${CONFIG_DIR}${NC}"
+    echo ""
 }
 
 # ================================ 测试功能 ================================
@@ -5677,14 +5711,18 @@ run_all_tests() {
 show_main_menu() {
     clear_screen
     print_header
+    show_control_center_snapshot
     
     echo -e "${WHITE}欢迎来到 OpenClaw Control Center。请选择你要处理的模块:${NC}"
     echo ""
     
+    echo -e "${CYAN}核心配置${NC}"
     print_menu_item "1" "系统状态" "📊"
     print_menu_item "2" "AI 模型配置" "🤖"
     print_menu_item "3" "消息渠道配置" "📱"
     print_menu_item "4" "身份与个性配置" "👤"
+    echo ""
+    echo -e "${CYAN}运维与诊断${NC}"
     print_menu_item "5" "安全设置" "🔒"
     print_menu_item "6" "服务管理" "⚡"
     print_menu_item "7" "快速测试" "🧪"
@@ -5694,6 +5732,7 @@ show_main_menu() {
     print_menu_item "0" "退出" "🚪"
     echo ""
     echo -e "${GRAY}提示: 建议先检查系统状态，再配置模型与消息渠道。${NC}"
+    echo -e "${GRAY}      完成配置后去“快速测试”，能最快发现真实问题。${NC}"
     print_divider
 }
 
@@ -5708,7 +5747,7 @@ main() {
     # 主循环
     while true; do
         show_main_menu
-        echo -en "${YELLOW}请选择 [0-9]: ${NC}"
+        echo -en "${YELLOW}❯ 请选择 [0-9]: ${NC}"
         read choice < "$TTY_INPUT"
         
         case $choice in

@@ -103,6 +103,10 @@ log_step() {
     echo -e "${BLUE}[STEP]${NC} $1"
 }
 
+print_rule() {
+    echo -e "${GRAY}──────────────────────────────────────────────────────────────${NC}"
+}
+
 spinner() {
     local pid=$1
     local delay=0.1
@@ -135,7 +139,7 @@ confirm() {
         local prompt="[y/N]"
     fi
     
-    echo -en "${YELLOW}$message $prompt: ${NC}"
+    echo -en "${YELLOW}❯ $message $prompt: ${NC}"
     read response < "$TTY_INPUT"
     response=${response:-$default}
     
@@ -169,6 +173,42 @@ print_step_done() {
     local step_num="$1"
     local description="$2"
     echo -e "${GREEN}  ✓ Step ${step_num} 已完成${NC} ${GRAY}·${NC} ${description}"
+}
+
+print_card() {
+    local title="$1"
+    shift
+    echo -e "${CYAN}╭─────────────────────────────────────────────────────────────╮${NC}"
+    echo -e "${CYAN}│${NC} ${WHITE}${title}${NC}"
+    while [ $# -gt 0 ]; do
+        echo -e "${CYAN}│${NC} $1"
+        shift
+    done
+    echo -e "${CYAN}╰─────────────────────────────────────────────────────────────╯${NC}"
+}
+
+print_tour_overview() {
+    print_card "🗺️  安装旅程总览" \
+        "  1. 环境检测与平台识别" \
+        "  2. 版本检查与依赖准备" \
+        "  3. OpenClaw 安装与初始化" \
+        "  4. 配置向导、服务启动与控制中心入口"
+    echo ""
+    print_card "✨ 体验亮点" \
+        "  • Windows / WSL2 / Linux / macOS 一套流程覆盖" \
+        "  • 遇到 npm、端口、权限、缓存问题时自动尝试修复" \
+        "  • 安装完成后可直接进入 OpenClaw Control Center"
+    echo ""
+}
+
+print_command_tip() {
+    local label="$1"
+    local command="$2"
+    local purpose="$3"
+    echo -e "${WHITE}  ${label}${NC}"
+    echo -e "     ${CYAN}${command}${NC}"
+    echo -e "     ${GRAY}${purpose}${NC}"
+    echo ""
 }
 
 # ================================ 错误诊断与自动修复 ================================
@@ -477,21 +517,12 @@ detect_os() {
         OS="windows"
         log_info "检测到 Windows 系统 (Git Bash/Cygwin)"
         echo ""
-        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-        echo -e "${WHITE}           🪟 Windows 安装方式选择${NC}"
-        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        print_card "🪟 Windows 安装方式选择" \
+            "  [1] Windows 本地安装 (PowerShell)  适合希望直接跑在本机上的用户" \
+            "  [2] WSL2 + Ubuntu 安装            兼容性更好，推荐首次安装选择" \
+            "  提示: 如果你不确定怎么选，默认直接使用 WSL2 即可"
         echo ""
-        echo -e "  ${CYAN}[1]${NC} 🖥️  ${WHITE}Windows 本地安装 (PowerShell)${NC}"
-        echo -e "      ${GRAY}直接在 Windows 上安装，适合不想使用 WSL 的用户${NC}"
-        echo -e "      ${GRAY}步骤: 安装 Node.js → npm 安装 OpenClaw → 运行向导${NC}"
-        echo ""
-        echo -e "  ${CYAN}[2]${NC} 🐧 ${WHITE}WSL2 + Ubuntu 安装 (推荐)${NC}"
-        echo -e "      ${GRAY}在 WSL2 中运行，提供完整 Linux 环境，官方推荐方式${NC}"
-        echo -e "      ${GRAY}步骤: 启用 WSL2 → 安装 Ubuntu → 安装 OpenClaw${NC}"
-        echo ""
-        echo -e "${YELLOW}提示: WSL2 方式兼容性更好，推荐首次安装用户选择${NC}"
-        echo ""
-        echo -en "${YELLOW}请选择安装方式 [1-2] (默认: 2): ${NC}"; read win_choice < "$TTY_INPUT"
+        echo -en "${YELLOW}❯ 请选择安装方式 [1-2] (默认: 2): ${NC}"; read win_choice < "$TTY_INPUT"
         win_choice=${win_choice:-2}
 
         case $win_choice in
@@ -2840,9 +2871,11 @@ run_config_menu() {
 
 main() {
     print_banner
+    print_tour_overview
     
-    echo -e "${YELLOW}⚠️  警告: OpenClaw 需要完全的计算机权限${NC}"
-    echo -e "${YELLOW}    不建议在主要工作电脑上安装，建议使用专用服务器或虚拟机${NC}"
+    print_card "⚠️  安装前提醒" \
+        "  OpenClaw 需要较高系统权限，建议优先使用测试机、虚拟机或专用环境。" \
+        "  如果你准备在主力设备上安装，请先确认自己的安全策略与权限范围。"
     echo ""
     
     if ! confirm "是否继续安装？"; then
@@ -2939,9 +2972,9 @@ main() {
         start_openclaw_service
     else
         echo ""
-        echo -e "${CYAN}稍后可以通过以下命令启动服务:${NC}"
-        echo "  source ~/.openclaw/env && openclaw gateway"
-        echo ""
+        print_card "⏯️  稍后启动服务" \
+            "  source ~/.openclaw/env && openclaw gateway" \
+            "  提示: 启动后通常可通过浏览器访问 Dashboard。"
     fi
     print_step_done "6/6" "服务配置完成"
     
@@ -2969,6 +3002,11 @@ main() {
     echo ""
     echo -e "${GRAY}支持渠道配置、身份设置、安全策略、服务管理与快速体检${NC}"
     echo ""
+    print_card "🎛️  控制中心能做什么" \
+        "  • 配置 AI 模型与备用模型" \
+        "  • 连接 Telegram / Discord / Slack / 飞书等渠道" \
+        "  • 统一管理服务状态、日志与诊断修复"
+    echo ""
     echo -e "${WHITE}💡 下次可以直接运行配置菜单:${NC}"
     echo -e "   ${CYAN}bash ./config-menu.sh${NC}"
     echo ""
@@ -2983,30 +3021,15 @@ main() {
 
     # 显示后续操作指南
     echo ""
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${WHITE}           📖 后续操作指南${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}╔═════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${WHITE}║  📖 后续操作指南                                           ║${NC}"
+    echo -e "${CYAN}╚═════════════════════════════════════════════════════════════╝${NC}"
     echo ""
-    echo -e "${WHITE}  1. 查看服务状态:${NC}"
-    echo -e "     ${CYAN}openclaw gateway status${NC}"
-    echo -e "     ${GRAY}目的: 确认 Gateway 是否运行正常${NC}"
-    echo ""
-    echo -e "${WHITE}  2. 运行诊断:${NC}"
-    echo -e "     ${CYAN}openclaw doctor${NC}"
-    echo -e "     ${GRAY}目的: 检查配置、依赖和连接问题${NC}"
-    echo ""
-    echo -e "${WHITE}  3. 配置消息渠道 (如飞书、Telegram、Discord):${NC}"
-    echo -e "     ${CYAN}bash ./config-menu.sh${NC}"
-    echo -e "     ${GRAY}目的: 连接聊天平台，让 AI 助手在多个渠道响应消息${NC}"
-    echo ""
-    echo -e "${WHITE}  4. 更新 OpenClaw 到最新版本:${NC}"
-    echo -e "     ${CYAN}npm update -g openclaw@latest${NC}"
-    echo -e "     ${GRAY}目的: 获取最新功能和安全补丁${NC}"
-    echo ""
-    echo -e "${WHITE}  5. 查看官方文档:${NC}"
-    echo -e "     ${PURPLE}https://docs.openclaw.ai/${NC}"
-    echo -e "     ${GRAY}目的: 了解高级功能如技能系统、多 Agent、远程网关等${NC}"
-    echo ""
+    print_command_tip "1. 查看服务状态" "openclaw gateway status" "确认 Gateway 是否运行正常"
+    print_command_tip "2. 运行诊断" "openclaw doctor" "检查配置、依赖和连接问题"
+    print_command_tip "3. 配置消息渠道" "bash ./config-menu.sh" "连接聊天平台，让 AI 助手在多个渠道响应消息"
+    print_command_tip "4. 更新 OpenClaw" "npm update -g openclaw@latest" "获取最新功能和安全补丁"
+    print_command_tip "5. 查看官方文档" "https://docs.openclaw.ai/" "了解技能系统、多 Agent、远程网关等高级能力"
     
     echo ""
     echo -e "${GREEN}🦞 OpenClaw 安装完成！祝你使用愉快！${NC}"
