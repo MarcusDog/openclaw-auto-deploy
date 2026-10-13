@@ -380,3 +380,13 @@ python3 scripts/generate_ui_screenshots.py
 ## License
 
 MIT
+
+<!-- ai-positioning:start -->
+## AI / Agent / 大模型定位
+
+- **AI 应用**：为 OpenClaw AI 应用提供跨平台安装、配置、诊断和服务管理体验。
+- **Agent**：部署 Agent 通过平台检测、依赖检查、修复与验证步骤降低首次安装成本，并保留清晰的失败信息。
+- **大模型（LLM）**：支持配置不同大模型（LLM）供应商；脚本只管理配置与运行环境，不把第三方模型能力写成自身实现。
+
+> 本节用于说明项目与 AI 的真实关系：已实现能力按现状描述，规划能力明确标注为“后续/尚未实现”。
+<!-- ai-positioning:end -->
